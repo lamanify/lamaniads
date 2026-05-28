@@ -1,0 +1,22 @@
+{
+  "name": "@lamani/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "zod": "^3.23.8",
+    "@lamani/config": "workspace:*",
+    "@lamani/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "tsx": "^4.10.5",
+    "@types/node": "^20.12.12"
+  }
+}
