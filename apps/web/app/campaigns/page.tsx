@@ -10,6 +10,7 @@ const DEFAULT_ACCOUNT_KEY = 'lamani_selected_account_id';
 
 export default function CampaignsPage() {
   const router = useRouter();
+  const [activePlatform, setActivePlatform] = useState<'meta' | 'google'>('meta');
   const [accounts, setAccounts] = useState<LiveAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [campaigns, setCampaigns] = useState<LiveCampaign[]>([]);
@@ -26,6 +27,29 @@ export default function CampaignsPage() {
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [statusFilter] = useState<Set<string>>(new Set(['active', 'paused']));
   
+  // Custom Google Ads Column toggles
+  const [googleColumns, setGoogleColumns] = useState<Record<string, boolean>>({
+    spend: true,
+    impressions: true,
+    reach: true,
+    clicks: true,
+    ctr: true,
+    cpc: true,
+    leads: true,
+    conversion_rate: true,
+    cpl: true,
+    frequency: true,
+    search_impression_share: true,
+    search_lost_is_budget: false,
+    search_lost_is_rank: false,
+    avg_cpc: true,
+    quality_score: false,
+    avg_position: false,
+    impressions_search: false,
+    clicks_search: false,
+    conversion_value: false,
+  });
+
   const readCache = <T,>(key: string): T | null => {
     try {
       const val = localStorage.getItem(key);
@@ -33,18 +57,15 @@ export default function CampaignsPage() {
     } catch { return null; }
   };
 
-  const bootstrap = async () => {
+  const bootstrap = async (platform = activePlatform) => {
     setError(null);
     try {
-      const accts = await campaignsApi.listLiveAccounts('Lamanify');
+      const accts = await campaignsApi.listLiveAccounts('Lamanify', platform);
       setAccounts(accts);
-      const savedDefault = readCache<string>(DEFAULT_ACCOUNT_KEY);
-      const initial = accts.find(a => a.platform_account_id === savedDefault) || accts[0];
-      if (initial) {
-        setSelectedAccountId(initial.platform_account_id);
-      }
+      const savedDefault = readCache<string>(`${DEFAULT_ACCOUNT_KEY}_${platform}`) || (accts[0] ? accts[0].platform_account_id : '');
+      setSelectedAccountId(savedDefault);
     } catch (err: any) {
-      setError(err.message || 'Failed to load Meta accounts.');
+      setError(err.message || `Failed to load ${platform === 'google' ? 'Google' : 'Meta'} accounts.`);
     }
   };
 
@@ -52,9 +73,9 @@ export default function CampaignsPage() {
     if (!accountId) return;
     if (!options.silent) setLoading(true);
     try {
-      const data = await campaignsApi.listLiveCampaigns(accountId);
+      const data = await campaignsApi.listLiveCampaigns(accountId, activePlatform);
       setCampaigns(data);
-      const insightsMap = await campaignsApi.getAllCampaignInsights(accountId).catch(() => ({}));
+      const insightsMap = await campaignsApi.getAllCampaignInsights(accountId, activePlatform).catch(() => ({}));
       setCampaignInsights(insightsMap);
     } catch (err: any) {
       setError(err.message || 'Failed to load campaigns.');
@@ -75,16 +96,16 @@ export default function CampaignsPage() {
   };
 
   useEffect(() => {
-    bootstrap();
+    bootstrap(activePlatform);
     loadDrafts();
-  }, []);
+  }, [activePlatform]);
 
   useEffect(() => {
     if (selectedAccountId) {
       loadCampaigns(selectedAccountId);
       setExpandedCampaignIds(new Set());
     }
-  }, [selectedAccountId]);
+  }, [selectedAccountId, activePlatform]);
 
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(c => statusFilter.has(c.status.toLowerCase()));
@@ -107,7 +128,7 @@ export default function CampaignsPage() {
     setActionLoading(c.platform_campaign_id);
     try {
       const newStatus = c.status.toLowerCase() === 'active' ? 'PAUSED' : 'ACTIVE';
-      await campaignsApi.updateCampaignStatus(selectedAccountId, c.platform_campaign_id, newStatus);
+      await campaignsApi.updateCampaignStatus(c.platform_campaign_id, newStatus as 'ACTIVE' | 'PAUSED');
       setCampaigns(prev => prev.map(item => 
         item.platform_campaign_id === c.platform_campaign_id ? { ...item, status: newStatus.toLowerCase() } : item
       ));
@@ -131,8 +152,32 @@ export default function CampaignsPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-6 bg-white dark:bg-zinc-950">
           <div className="flex items-center gap-4">
-            <div className="text-sm font-medium flex items-center gap-2">
-              <span>Live Meta Ads</span>
+            <div className="flex bg-zinc-100 dark:bg-zinc-900 p-0.5 rounded-md text-xs font-semibold mr-2 border border-zinc-200 dark:border-zinc-800">
+              <button 
+                onClick={() => {
+                  setActivePlatform('meta');
+                  setAccounts([]);
+                  setSelectedAccountId('');
+                  setCampaigns([]);
+                }}
+                className={`px-3 py-1 rounded-md transition-colors ${activePlatform === 'meta' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm' : 'text-zinc-500'}`}
+              >
+                Meta Ads
+              </button>
+              <button 
+                onClick={() => {
+                  setActivePlatform('google');
+                  setAccounts([]);
+                  setSelectedAccountId('');
+                  setCampaigns([]);
+                }}
+                className={`px-3 py-1 rounded-md transition-colors ${activePlatform === 'google' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm' : 'text-zinc-500'}`}
+              >
+                Google Ads
+              </button>
+            </div>
+            <div className="text-sm font-medium flex items-center gap-2 border-l border-zinc-200 dark:border-zinc-800 pl-4">
+              <span>Live {activePlatform === 'google' ? 'Google' : 'Meta'} Ads</span>
               {error && <span className="text-xs text-red-500 font-normal">({error})</span>}
             </div>
             {accounts.length > 0 && (
@@ -169,15 +214,19 @@ export default function CampaignsPage() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Lamanify Account Control</h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Live Meta Campaign, Ad Set, and Ads hierarchy for Lamanify accounts.</p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                Live {activePlatform === 'google' ? 'Google' : 'Meta'} Campaign, {activePlatform === 'google' ? 'Ad Group' : 'Ad Set'}, and Ads hierarchy for Lamanify accounts.
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => router.push(`/campaigns/new?account_id=${selectedAccountId}`)} 
-                className="px-4 py-2 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
-              >
-                Create campaign
-              </button>
+              {activePlatform === 'meta' && (
+                <button 
+                  onClick={() => router.push(`/campaigns/new?account_id=${selectedAccountId}`)} 
+                  className="px-4 py-2 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
+                >
+                  Create campaign
+                </button>
+              )}
               <button onClick={() => loadCampaigns(selectedAccountId, { silent: true })} className="p-2 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -229,59 +278,239 @@ export default function CampaignsPage() {
           <div className="space-y-3">
              <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Live Campaigns</h2>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative">
                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                       <Filter className="h-3 w-3" /> Filter
                    </button>
                    <button onClick={() => setShowColumnDropdown(!showColumnDropdown)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                       <Columns className="h-3 w-3" /> Columns
                    </button>
+                   {showColumnDropdown && activePlatform === 'google' && (
+                     <div className="absolute right-0 mt-8 w-56 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md shadow-lg z-50 p-2 space-y-1">
+                       <div className="text-[10px] uppercase font-bold text-zinc-400 px-2 py-1">Toggle Columns</div>
+                       {Object.keys(googleColumns).map(col => (
+                         <label key={col} className="flex items-center gap-2 px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded cursor-pointer text-xs select-none">
+                           <input 
+                             type="checkbox" 
+                             checked={googleColumns[col]} 
+                             onChange={(e) => setGoogleColumns(prev => ({ ...prev, [col]: e.target.checked }))}
+                             className="rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-900"
+                           />
+                           <span className="capitalize">{col.replace(/_/g, ' ')}</span>
+                         </label>
+                       ))}
+                     </div>
+                   )}
                 </div>
              </div>
              
-             <div className="border border-zinc-200 dark:border-zinc-800 rounded-md overflow-hidden bg-white dark:bg-zinc-950">
-                <table className="w-full text-left text-[13px] border-collapse">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900/50 text-[11px] uppercase tracking-widest text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
-                    <tr>
-                      <th className="px-6 py-3 font-medium">Name / Hierarchy</th>
-                      <th className="px-6 py-3 font-medium">Status</th>
-                      <th className="px-6 py-3 font-medium">Objective</th>
-                      <th className="px-6 py-3 font-medium text-right">Budget</th>
-                      <th className="px-6 py-3 font-medium text-right">Leads</th>
-                      <th className="px-6 py-3 font-medium text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {loading ? (
-                      <tr><td colSpan={6} className="px-6 py-12 text-center text-zinc-400">Loading live campaigns...</td></tr>
-                    ) : filteredCampaigns.length === 0 ? (
-                      <tr><td colSpan={6} className="px-6 py-12 text-center text-zinc-400">No live campaigns found.</td></tr>
-                    ) : filteredCampaigns.map(c => (
-                      <tr key={c.platform_campaign_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                        <td className="px-6 py-4">
-                           <div className="flex items-center gap-2">
-                             <button onClick={() => toggleCampaign(c.platform_campaign_id)}>
-                                {expandedCampaignIds.has(c.platform_campaign_id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                             </button>
-                             <div className="font-medium">{c.name}</div>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 capitalize">{c.status.toLowerCase()}</td>
-                        <td className="px-6 py-4 text-[11px] font-mono text-zinc-500 uppercase">{c.normalized_payload_json?.objective || '—'}</td>
-                        <td className="px-6 py-4 text-right tabular-nums">{c.budget_amount > 0 ? `${selectedAccount?.currency || ''} ${(c.budget_amount / 100).toFixed(2)}` : '—'}</td>
-                        <td className="px-6 py-4 text-right font-semibold">{campaignInsights[c.platform_campaign_id]?.leads || 0}</td>
-                        <td className="px-6 py-4 text-right">
-                           <button 
-                             onClick={() => handleToggleStatus(c)} 
-                             disabled={actionLoading === c.platform_campaign_id}
-                             className={`px-3 py-1 text-[11px] font-medium rounded border transition-colors ${c.status.toLowerCase() === 'active' ? 'border-zinc-300 text-zinc-600 hover:text-zinc-900' : 'bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 border-transparent'}`}
-                           >
-                             {actionLoading === c.platform_campaign_id ? '...' : c.status.toLowerCase() === 'active' ? 'Pause' : 'Resume'}
-                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+             <div className="border border-zinc-200 dark:border-zinc-800 rounded-md overflow-hidden bg-white dark:bg-zinc-950 overflow-x-auto">
+                <table className="w-full text-left text-[13px] border-collapse min-w-max">
+                  {activePlatform === 'meta' ? (
+                    <>
+                      <thead className="bg-zinc-50 dark:bg-zinc-900/50 text-[11px] uppercase tracking-widest text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                        <tr>
+                          <th className="px-6 py-3 font-medium">Name / Hierarchy</th>
+                          <th className="px-6 py-3 font-medium">Status</th>
+                          <th className="px-6 py-3 font-medium">Objective</th>
+                          <th className="px-6 py-3 font-medium text-right">Budget</th>
+                          <th className="px-6 py-3 font-medium text-right">Leads</th>
+                          <th className="px-6 py-3 font-medium text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        {loading ? (
+                          <tr><td colSpan={6} className="px-6 py-12 text-center text-zinc-400">Loading live campaigns...</td></tr>
+                        ) : filteredCampaigns.length === 0 ? (
+                          <tr><td colSpan={6} className="px-6 py-12 text-center text-zinc-400">No live campaigns found.</td></tr>
+                        ) : filteredCampaigns.map(c => (
+                          <tr key={c.platform_campaign_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                            <td className="px-6 py-4">
+                               <div className="flex items-center gap-2">
+                                 <button onClick={() => toggleCampaign(c.platform_campaign_id)}>
+                                    {expandedCampaignIds.has(c.platform_campaign_id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                 </button>
+                                 <div className="font-medium">{c.name}</div>
+                               </div>
+                            </td>
+                            <td className="px-6 py-4 capitalize">{c.status.toLowerCase()}</td>
+                            <td className="px-6 py-4 text-[11px] font-mono text-zinc-500 uppercase">{c.normalized_payload_json?.objective || '—'}</td>
+                            <td className="px-6 py-4 text-right tabular-nums">{c.budget_amount > 0 ? `${selectedAccount?.currency || ''} ${(c.budget_amount / 100).toFixed(2)}` : '—'}</td>
+                            <td className="px-6 py-4 text-right font-semibold">{campaignInsights[c.platform_campaign_id]?.leads || 0}</td>
+                            <td className="px-6 py-4 text-right">
+                               <button 
+                                 onClick={() => handleToggleStatus(c)} 
+                                 disabled={actionLoading === c.platform_campaign_id}
+                                 className={`px-3 py-1 text-[11px] font-medium rounded border transition-colors ${c.status.toLowerCase() === 'active' ? 'border-zinc-300 text-zinc-600 hover:text-zinc-900' : 'bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 border-transparent'}`}
+                               >
+                                 {actionLoading === c.platform_campaign_id ? '...' : c.status.toLowerCase() === 'active' ? 'Pause' : 'Resume'}
+                               </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </>
+                  ) : (
+                    <>
+                      <thead className="bg-zinc-50 dark:bg-zinc-900/50 text-[11px] uppercase tracking-widest text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                        <tr>
+                          <th className="px-6 py-3 font-medium">Name / Hierarchy</th>
+                          <th className="px-6 py-3 font-medium">Status</th>
+                          <th className="px-6 py-3 font-medium">Channel Type</th>
+                          {googleColumns.spend && <th className="px-6 py-3 font-medium text-right">Spend</th>}
+                          {googleColumns.impressions && <th className="px-6 py-3 font-medium text-right">Impressions</th>}
+                          {googleColumns.reach && <th className="px-6 py-3 font-medium text-right">Reach</th>}
+                          {googleColumns.clicks && <th className="px-6 py-3 font-medium text-right">Clicks</th>}
+                          {googleColumns.ctr && <th className="px-6 py-3 font-medium text-right">CTR</th>}
+                          {googleColumns.cpc && <th className="px-6 py-3 font-medium text-right">CPC</th>}
+                          {googleColumns.leads && <th className="px-6 py-3 font-medium text-right">Conversions (Leads)</th>}
+                          {googleColumns.conversion_rate && <th className="px-6 py-3 font-medium text-right">Conversion Rate</th>}
+                          {googleColumns.cpl && <th className="px-6 py-3 font-medium text-right">CPL</th>}
+                          {googleColumns.frequency && <th className="px-6 py-3 font-medium text-right">Frequency</th>}
+                          {googleColumns.search_impression_share && <th className="px-6 py-3 font-medium text-right">Search IS</th>}
+                          {googleColumns.search_lost_is_budget && <th className="px-6 py-3 font-medium text-right">Search Lost IS (budget)</th>}
+                          {googleColumns.search_lost_is_rank && <th className="px-6 py-3 font-medium text-right">Search Lost IS (rank)</th>}
+                          {googleColumns.avg_cpc && <th className="px-6 py-3 font-medium text-right">Avg. CPC</th>}
+                          {googleColumns.quality_score && <th className="px-6 py-3 font-medium text-right">Quality Score</th>}
+                          {googleColumns.avg_position && <th className="px-6 py-3 font-medium text-right">Avg. Position</th>}
+                          {googleColumns.impressions_search && <th className="px-6 py-3 font-medium text-right">Impressions (Search)</th>}
+                          {googleColumns.clicks_search && <th className="px-6 py-3 font-medium text-right">Clicks (Search)</th>}
+                          {googleColumns.conversion_value && <th className="px-6 py-3 font-medium text-right">Conversion Value</th>}
+                          <th className="px-6 py-3 font-medium text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        {loading ? (
+                          <tr><td colSpan={24} className="px-6 py-12 text-center text-zinc-400">Loading live campaigns...</td></tr>
+                        ) : filteredCampaigns.length === 0 ? (
+                          <tr><td colSpan={24} className="px-6 py-12 text-center text-zinc-400">No live campaigns found.</td></tr>
+                        ) : filteredCampaigns.map(c => {
+                          const insights = (campaignInsights[c.platform_campaign_id] || {}) as Partial<LiveInsights>;
+                          const currency = selectedAccount?.currency || 'USD';
+                          return (
+                            <tr key={c.platform_campaign_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                              <td className="px-6 py-4">
+                                 <div className="flex items-center gap-2">
+                                   <button onClick={() => toggleCampaign(c.platform_campaign_id)}>
+                                      {expandedCampaignIds.has(c.platform_campaign_id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                   </button>
+                                   <div className="font-medium">{c.name}</div>
+                                 </div>
+                              </td>
+                              <td className="px-6 py-4 capitalize">{c.status.toLowerCase()}</td>
+                              <td className="px-6 py-4 text-[11px] font-mono text-zinc-500 uppercase">
+                                 {c.normalized_payload_json?.advertising_channel_type || '—'}
+                              </td>
+                              {googleColumns.spend && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {currency} {(insights.spend || 0).toFixed(2)}
+                                </td>
+                              )}
+                              {googleColumns.impressions && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.impressions || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.reach && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.reach || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.clicks && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.clicks || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.ctr && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {((insights.ctr || 0) * 100).toFixed(2)}%
+                                </td>
+                              )}
+                              {googleColumns.cpc && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {currency} {(insights.cpc || 0).toFixed(2)}
+                                </td>
+                              )}
+                              {googleColumns.leads && (
+                                <td className="px-6 py-4 text-right font-semibold tabular-nums">
+                                  {(insights.leads || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.conversion_rate && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {((insights.conversion_rate || 0) * 100).toFixed(2)}%
+                                </td>
+                              )}
+                              {googleColumns.cpl && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {currency} {(insights.cost_per_lead || 0).toFixed(2)}
+                                </td>
+                              )}
+                              {googleColumns.frequency && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.frequency || 1.0).toFixed(2)}
+                                </td>
+                              )}
+                              {googleColumns.search_impression_share && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.search_impression_share || 0).toFixed(2)}%
+                                </td>
+                              )}
+                              {googleColumns.search_lost_is_budget && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.search_lost_is_budget || 0).toFixed(2)}%
+                                </td>
+                              )}
+                              {googleColumns.search_lost_is_rank && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.search_lost_is_rank || 0).toFixed(2)}%
+                                </td>
+                              )}
+                              {googleColumns.avg_cpc && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {currency} {(insights.avg_cpc || 0).toFixed(2)}
+                                </td>
+                              )}
+                              {googleColumns.quality_score && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {insights.quality_score || '—'}
+                                </td>
+                              )}
+                              {googleColumns.avg_position && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.avg_position || 0).toFixed(1)}
+                                </td>
+                              )}
+                              {googleColumns.impressions_search && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.impressions_search || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.clicks_search && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {(insights.clicks_search || 0).toLocaleString()}
+                                </td>
+                              )}
+                              {googleColumns.conversion_value && (
+                                <td className="px-6 py-4 text-right tabular-nums">
+                                  {currency} {(insights.conversion_value || 0).toFixed(2)}
+                                </td>
+                              )}
+                              <td className="px-6 py-4 text-right">
+                                 <button 
+                                   onClick={() => handleToggleStatus(c)} 
+                                   disabled={actionLoading === c.platform_campaign_id}
+                                   className={`px-3 py-1 text-[11px] font-medium rounded border transition-colors ${c.status.toLowerCase() === 'active' ? 'border-zinc-300 text-zinc-600 hover:text-zinc-900' : 'bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 border-transparent'}`}
+                                 >
+                                   {actionLoading === c.platform_campaign_id ? '...' : c.status.toLowerCase() === 'active' ? 'Pause' : 'Resume'}
+                                 </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </>
+                  )}
                 </table>
              </div>
           </div>
