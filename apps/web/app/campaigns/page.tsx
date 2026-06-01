@@ -106,10 +106,10 @@ export default function CampaignsPage() {
   const handleToggleStatus = async (c: LiveCampaign) => {
     setActionLoading(c.platform_campaign_id);
     try {
-      const newStatus = c.status.toLowerCase() === 'active' ? 'paused' : 'active';
-      await campaignsApi.updateStatus(c.platform_campaign_id, newStatus);
+      const newStatus = c.status.toLowerCase() === 'active' ? 'PAUSED' : 'ACTIVE';
+      await campaignsApi.updateCampaignStatus(selectedAccountId, c.platform_campaign_id, newStatus);
       setCampaigns(prev => prev.map(item => 
-        item.platform_campaign_id === c.platform_campaign_id ? { ...item, status: newStatus } : item
+        item.platform_campaign_id === c.platform_campaign_id ? { ...item, status: newStatus.toLowerCase() } : item
       ));
     } catch (err: any) {
       alert(err.message || 'Failed to update status');
@@ -131,16 +131,14 @@ export default function CampaignsPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-6 bg-white dark:bg-zinc-950">
           <div className="flex items-center gap-4">
-            <div className="text-sm font-medium">Live Meta Ads</div>
+            <div className="text-sm font-medium flex items-center gap-2">
+              <span>Live Meta Ads</span>
+              {error && <span className="text-xs text-red-500 font-normal">({error})</span>}
+            </div>
             {accounts.length > 0 && (
               <div className="relative">
                 <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowAccountDropdown(!showAccountDropdown);
-                  }}
+                  onClick={() => setShowAccountDropdown(!showAccountDropdown)}
                   className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 >
                   {selectedAccount?.name || 'Select Account'}
@@ -151,16 +149,13 @@ export default function CampaignsPage() {
                     {accounts.map(a => (
                       <button
                         key={a.platform_account_id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onClick={() => {
                           setSelectedAccountId(a.platform_account_id);
                           setShowAccountDropdown(false);
                         }}
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${selectedAccountId === a.platform_account_id ? 'bg-zinc-50 dark:bg-zinc-900 font-semibold' : ''}`}
                       >
-                        <span className="pointer-events-none">{a.name}</span>
+                        {a.name}
                       </button>
                     ))}
                   </div>
@@ -235,11 +230,11 @@ export default function CampaignsPage() {
              <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Live Campaigns</h2>
                 <div className="flex items-center gap-2">
-                   <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowFilterDropdown(!showFilterDropdown); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                      <Filter className="h-3 w-3 pointer-events-none" /> <span className="pointer-events-none">Filter</span>
+                   <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                      <Filter className="h-3 w-3" /> Filter
                    </button>
-                   <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowColumnDropdown(!showColumnDropdown); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                      <Columns className="h-3 w-3 pointer-events-none" /> <span className="pointer-events-none">Columns</span>
+                   <button onClick={() => setShowColumnDropdown(!showColumnDropdown)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-800 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                      <Columns className="h-3 w-3" /> Columns
                    </button>
                 </div>
              </div>
