@@ -10,10 +10,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
     API_PORT: int = 8000
+    APP_URL: str = "http://localhost:3000"
     META_APP_ID: str
     META_CLIENT_SECRET: str
+    META_DEV_TOKEN: str = ""
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
+    NEXT_PUBLIC_SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
     
     model_config = SettingsConfigDict(env_file=env_file_path, extra="ignore")
 

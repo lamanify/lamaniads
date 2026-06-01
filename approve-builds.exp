@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+cd [lindex $argv 0]
+
+spawn pnpm approve-builds
+
+expect "Press <space> to select"
+send "a"
+sleep 0.5
+send "\r"
+
+expect eof

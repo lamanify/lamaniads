@@ -12,5 +12,9 @@ dependencies = [
     "structlog>=24.1.0",
     "sqlalchemy[asyncio]>=2.0.30",
     "asyncpg>=0.29.0",
-    "alembic>=1.13.1"
+    "alembic>=1.13.1",
+    "httpx>=0.28.1",
+    "cryptography>=48.0.0",
+    "pyjwt>=2.13.0",
+    "python-multipart>=0.0.29",
 ]

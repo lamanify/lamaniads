@@ -1,6 +1,8 @@
 import './globals.css';
 import React from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'LamaniAds Control Plane',
   description: 'Unified Ads Manager across Meta and Google Ads',

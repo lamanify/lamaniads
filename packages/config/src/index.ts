@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const ConfigSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  APP_URL: z.string().default('http://localhost:3000'),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
   META_APP_ID: z.string().optional(),

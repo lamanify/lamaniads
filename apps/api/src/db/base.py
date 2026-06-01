@@ -62,3 +62,47 @@ class Campaign(Base):
     native_payload_json = Column(JSON, nullable=True)
     normalized_payload_json = Column(JSON, nullable=True)
     last_synced_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class CampaignDraft(Base):
+    __tablename__ = 'campaign_drafts'
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    org_id = Column(String, nullable=False, index=True)
+    created_by = Column(String, nullable=True)
+    platform = Column(String, nullable=False, default="meta")
+    platform_account_id = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    client_name = Column(String, nullable=True)
+    internal_naming = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="draft")
+    step = Column(Integer, nullable=False, default=1)
+    campaign_payload = Column(JSON, nullable=False, default=dict)
+    client_review_token = Column(String, unique=True, nullable=True)
+    published_campaign_id = Column(String, nullable=True)
+    publish_error = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CampaignDraftAdSet(Base):
+    __tablename__ = 'campaign_draft_adsets'
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    draft_id = Column(String, ForeignKey('campaign_drafts.id', ondelete='CASCADE'), nullable=False, index=True)
+    position = Column(Integer, nullable=False, default=0)
+    name = Column(String, nullable=False)
+    payload = Column(JSON, nullable=False, default=dict)
+    published_adset_id = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CampaignDraftAd(Base):
+    __tablename__ = 'campaign_draft_ads'
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    adset_id = Column(String, ForeignKey('campaign_draft_adsets.id', ondelete='CASCADE'), nullable=False, index=True)
+    position = Column(Integer, nullable=False, default=0)
+    name = Column(String, nullable=False)
+    payload = Column(JSON, nullable=False, default=dict)
+    published_ad_id = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

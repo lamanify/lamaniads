@@ -2,17 +2,21 @@
   "name": "lamani-ads-monorepo",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "concurrently --kill-others \"turbo dev\" \"cd apps/api && .venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 8000\"",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
-    "turbo": "^2.0.4",
+    "@types/node": "^20.12.12",
+    "concurrently": "^9.2.1",
     "prettier": "^3.2.5",
-    "@types/node": "^20.12.12"
+    "turbo": "^2.0.4",
+    "typescript": "^5.4.5"
   },
-  "packageManager": "pnpm@9.1.2"
+  "packageManager": "pnpm@11.2.2",
+  "dependencies": {
+    "next": "14.2.3"
+  }
 }

@@ -19,14 +19,13 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 async def connect_meta_url(
     org_id: str = Depends(get_current_org_id)
 ):
-    # Construct Meta OAuth URL
-    redirect_uri = f"https://yourdomain.com/api/platforms/callback/meta"
+    redirect_uri = f"{settings.APP_URL}/api/platforms/callback/meta"
     params = {
         "client_id": settings.META_APP_ID,
         "redirect_uri": redirect_uri,
-        "scope": "ads_management,ads_read,business_management",
+        "scope": "ads_management,ads_read,business_management,pages_show_list,pages_read_engagement,pages_manage_metadata,instagram_basic",
         "response_type": "code",
-        "state": org_id # Pass org_id in state to retrieve it in callback
+        "state": org_id
     }
     query_string = "&".join([f"{k}={v}" for k, v in params.items()])
     return {"url": f"{META_OAUTH_URL}?{query_string}"}
@@ -37,12 +36,11 @@ async def callback_meta(
     state: str,
     db: AsyncSession = Depends(get_db)
 ):
-    # Exchange code for token
     async with httpx.AsyncClient() as client:
         response = await client.get(META_TOKEN_URL, params={
             "client_id": settings.META_APP_ID,
             "client_secret": settings.META_CLIENT_SECRET,
-            "redirect_uri": f"https://yourdomain.com/api/platforms/callback/meta",
+            "redirect_uri": f"{settings.APP_URL}/api/platforms/callback/meta",
             "code": code
         })
         
@@ -52,7 +50,6 @@ async def callback_meta(
         data = response.json()
         access_token = data.get("access_token")
         
-        # Encrypt and store token in Supabase
         encrypted_token = encrypt_token(access_token)
         
         connection = PlatformConnection(
@@ -70,7 +67,7 @@ async def callback_meta(
 async def connect_google_url(
     org_id: str = Depends(get_current_org_id)
 ):
-    redirect_uri = "https://yourdomain.com/api/platforms/callback/google"
+    redirect_uri = f"{settings.APP_URL}/api/platforms/callback/google"
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": redirect_uri,
@@ -93,7 +90,7 @@ async def callback_google(
         response = await client.post(GOOGLE_TOKEN_URL, data={
             "client_id": settings.GOOGLE_CLIENT_ID,
             "client_secret": settings.GOOGLE_CLIENT_SECRET,
-            "redirect_uri": "https://yourdomain.com/api/platforms/callback/google",
+            "redirect_uri": f"{settings.APP_URL}/api/platforms/callback/google",
             "grant_type": "authorization_code",
             "code": code
         })
