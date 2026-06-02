@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "deploy": "pnpm build:worker && wrangler pages deploy"
+    "deploy": "pnpm build:worker && wrangler pages deploy .open-next/cloudflare"
   },
   "dependencies": {
     "@lamani/config": "workspace:*",
