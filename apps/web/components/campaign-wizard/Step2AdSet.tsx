@@ -298,7 +298,7 @@ export function Step2AdSet({}: Step2AdSetProps) {
                             className={cn(
                               'inline-flex items-center rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
                               isActive
-                                ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                                ? 'border-brand bg-brand text-white'
                                 : 'border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900'
                             )}
                           >
@@ -389,7 +389,7 @@ export function Step2AdSet({}: Step2AdSetProps) {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <Input
-                        label="Daily budget (cents)"
+                        label="Daily budget (RM)"
                         type="number"
                         min={100}
                         value={active.payload?.daily_budget || ''}
@@ -401,7 +401,7 @@ export function Step2AdSet({}: Step2AdSetProps) {
                         }
                       />
                       <Input
-                        label="Lifetime budget (cents)"
+                        label="Lifetime budget (RM)"
                         type="number"
                         min={100}
                         value={active.payload?.lifetime_budget || ''}

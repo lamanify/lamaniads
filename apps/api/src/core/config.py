@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str
     NEXT_PUBLIC_SUPABASE_URL: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
+    JWT_SECRET_KEY: str = "super_secret_temporary_key_change_in_production"
+    
+    # OpenAI Compatible AI Writing configuration
+    AI_WRITING_BASE_URL: str = ""
+    AI_WRITING_API_KEY: str = ""
+    AI_WRITING_MODEL: str = ""
     
     model_config = SettingsConfigDict(env_file=env_file_path, extra="ignore")
 

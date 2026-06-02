@@ -275,7 +275,7 @@ export function Step3Ad({ onPublish }: { onPublish: () => void }) {
                         className={cn(
                           'inline-flex items-center rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
                           activeAd.payload?.format === f
-                            ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                            ? 'border-brand bg-brand text-white'
                             : 'border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900'
                         )}
                       >

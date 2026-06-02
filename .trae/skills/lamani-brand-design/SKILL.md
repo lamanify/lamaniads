@@ -15,7 +15,7 @@ Apply this skill to every UI surface (apps/web, packages/ui, marketing, MCP UI).
 3. Keyboard first. Every primary action reachable via cmdk palette.
 4. Honest density. Information-rich without clutter; whitespace earns its place.
 5. Dark by default. Light theme is a peer, not an afterthought.
-6. Monochrome with a single accent. Color signals state, not style.
+6. Monochrome with brand accent `#e9204f`. Color signals action, not decoration.
 
 ## 2. Color System
 
@@ -40,9 +40,12 @@ Use Tailwind's built-in zinc scale with explicit dark mode variants:
 - Subtle: `border-zinc-100 dark:border-zinc-900`
 - Hover: `hover:border-zinc-400 dark:hover:border-zinc-600`
 
-### Accent (single)
-- Primary CTA: `bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900`
-- Hover: add `hover:opacity-90`
+### Brand accent
+- **Brand color**: `#e9204f` (use Tailwind class `bg-brand` or `text-brand`)
+- Primary CTA: `bg-brand text-white hover:opacity-90`
+- Brand border: `border-brand`
+- Opacity variants: `bg-brand/80` for overlays, `bg-brand/10` for subtle backgrounds
+- **Consistent across light/dark modes** — brand color does not invert
 
 ### Semantic state
 - success `bg-emerald-500` or `text-emerald-500`
@@ -89,7 +92,7 @@ Use only on status pills, badges, toasts. Never on primary surfaces.
 
 ## 6. Components (shadcn-aligned)
 
-- Button: ghost is default in tables, outline for secondary, solid (inverted) only for primary CTA. One primary per view.
+- Button: ghost is default in tables, outline for secondary, solid brand color (`bg-brand text-white`) only for primary CTA. One primary per view.
 - Input: 36px height, no inner shadow, label above with `text-xs text-zinc-500 dark:text-zinc-400`.
 - Table: zebra off, hairline rows, hover `hover:bg-zinc-100 dark:hover:bg-zinc-800`, sticky header `bg-white dark:bg-zinc-950 backdrop-blur`.
 - Badge: `text-[10px] uppercase tracking-widest`, semantic bg at 10% opacity.
@@ -132,7 +135,7 @@ Use only on status pills, badges, toasts. Never on primary surfaces.
 
 ## 12. Marketing Surfaces
 
-- Hero: black background, white type, single accent line, no gradients.
+- Hero: black background, white type, single brand accent line (`bg-brand`), no gradients.
 - Use grain or noise at 2% opacity max. No glassmorphism.
 - Screenshots framed in `rounded-lg border border-zinc-200 dark:border-zinc-800` only.
 
@@ -151,6 +154,7 @@ Use only on status pills, badges, toasts. Never on primary surfaces.
 When building a new page or component:
 
 - [ ] Use explicit `zinc-*` Tailwind classes with `dark:` variants, NOT CSS variable-based colors.
+- [ ] Primary CTAs use `bg-brand text-white`, not inverted zinc colors.
 - [ ] Empty, loading (skeleton), error, permission-denied, success states present.
 - [ ] Light + dark verified.
 - [ ] Keyboard path verified (Tab + ⌘K).
@@ -166,6 +170,23 @@ When building a new page or component:
 - Classes like `border-border/40` or `text-muted-foreground/70` produce zero CSS output
 - Explicit `zinc-*` classes with `dark:` variants work reliably across all Tailwind features
 - Pattern: `border-zinc-200 dark:border-zinc-800` for subtle hairlines matching Vercel aesthetic
+
+**Brand color setup (tailwind.config.ts):**
+```ts
+extend: {
+  colors: {
+    brand: '#e9204f',
+    // ... other semantic colors
+  }
+}
+```
+
+**Brand color in globals.css:**
+```css
+:root {
+  --brand: #e9204f;
+}
+```
 
 ## 16. References
 

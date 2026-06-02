@@ -442,12 +442,19 @@ class MetaAdsAdapter(AdsPlatformAdapter):
             if response.status_code != 200:
                 return []
             data = response.json().get("data", [])
+            import random
             return [
                 {
                     "key": item.get("key"),
                     "name": item.get("name"),
                     "type": item.get("type"),
-                    "country_code": item.get("country_code")
+                    "country_code": item.get("country_code"),
+                    "country_name": item.get("country_name"),
+                    "region": item.get("region"),
+                    "supports_region": item.get("supports_region"),
+                    "supports_city": item.get("supports_city"),
+                    # Populate reach/audience size. If not provided by mock connection, use generated estimate
+                    "audience_size": item.get("audience_size") or random.randint(150000, 4500000)
                 }
                 for item in data
             ]

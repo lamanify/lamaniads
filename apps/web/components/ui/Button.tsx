@@ -19,7 +19,7 @@ export function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600 disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
-    primary: 'bg-zinc-900 text-white hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900',
+    primary: 'bg-brand text-white hover:opacity-90',
     secondary: 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900',
     ghost: 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50',
     danger: 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:text-white dark:hover:bg-red-600',

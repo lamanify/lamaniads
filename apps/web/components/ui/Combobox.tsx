@@ -72,9 +72,9 @@ export function Combobox({
 
   const handleSelect = (opt: ComboboxOption) => {
     onSelect(opt);
+    setQuery('');
     if (!multi) {
       setOpen(false);
-      setQuery('');
     }
   };
 

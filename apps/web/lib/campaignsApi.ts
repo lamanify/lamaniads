@@ -21,6 +21,7 @@ type LiveCampaign = {
     buying_type?: string;
     start_time?: string;
     stop_time?: string;
+    advertising_channel_type?: string;
   };
 };
 
@@ -57,6 +58,16 @@ type LiveInsights = {
   leads: number;
   conversion_rate: number;
   cost_per_lead: number;
+  // Google Ads metrics
+  search_impression_share?: number;
+  search_lost_is_budget?: number;
+  search_lost_is_rank?: number;
+  avg_cpc?: number;
+  quality_score?: number;
+  avg_position?: number;
+  impressions_search?: number;
+  clicks_search?: number;
+  conversion_value?: number;
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -77,11 +88,20 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const campaignsApi = {
-  listLiveAccounts: (nameFilter?: string) =>
-    api<LiveAccount[]>(`/campaigns/live/accounts${nameFilter ? `?name_filter=${encodeURIComponent(nameFilter)}` : ''}`),
+  listLiveAccounts: (nameFilter?: string, platform?: string) => {
+    let url = `/campaigns/live/accounts`;
+    const params = new URLSearchParams();
+    if (nameFilter) params.append('name_filter', nameFilter);
+    if (platform) params.append('platform', platform);
+    const queryStr = params.toString();
+    return api<LiveAccount[]>(queryStr ? `${url}?${queryStr}` : url);
+  },
 
-  listLiveCampaigns: (accountId: string) =>
-    api<LiveCampaign[]>(`/campaigns/live?account_id=${encodeURIComponent(accountId)}`),
+  listLiveCampaigns: (accountId: string, platform?: string) => {
+    let url = `/campaigns/live?account_id=${encodeURIComponent(accountId)}`;
+    if (platform) url += `&platform=${encodeURIComponent(platform)}`;
+    return api<LiveCampaign[]>(url);
+  },
 
   getAllCampaignInsights: (accountId: string, datePreset = 'last_30d') =>
     api<Record<string, LiveInsights>>(
@@ -99,7 +119,7 @@ export const campaignsApi = {
   listLiveAds: (adsetId: string) =>
     api<LiveAd[]>(`/campaigns/live/adsets/${adsetId}/ads`),
 
-  updateStatus: (campaignId: string, status: 'active' | 'paused') =>
+  updateCampaignStatus: (campaignId: string, status: 'ACTIVE' | 'PAUSED') =>
     api<{ success: boolean }>(`/campaigns/live/${campaignId}/status`, {
       method: 'POST',
       body: JSON.stringify({ status }),
@@ -123,17 +143,41 @@ export const campaignsApi = {
   searchTargeting: (q: string, type = 'country') =>
     api<any[]>(`/campaigns/meta/targeting/search?q=${encodeURIComponent(q)}&type=${type}`),
 
+  searchGoogleTargeting: (q: string, accountId: string) =>
+    api<any[]>(`/campaigns/google/targeting/search?q=${encodeURIComponent(q)}&account_id=${encodeURIComponent(accountId)}`),
+
+  generateAiCopy: (prompt: string, keywords: string[]) =>
+    api<{ headlines: string[]; descriptions: string[] }>('/campaigns/ai/write', {
+      method: 'POST',
+      body: JSON.stringify({ prompt, keywords }),
+    }),
+
+  getPublicDraft: (draftId: string) =>
+    api<any>(`/campaigns/public/drafts/${draftId}`),
+
+  getPublicComments: (draftId: string) =>
+    api<any[]>(`/campaigns/public/drafts/${draftId}/comments`),
+
+  addPublicComment: (draftId: string, body: { field_type: string; field_index: number; author_name: string; message: string }) =>
+    api<any>(`/campaigns/public/drafts/${draftId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
   searchInterests: (q: string) =>
     api<any[]>(`/campaigns/meta/targeting/interests?q=${encodeURIComponent(q)}`),
 
-  createDraft: (body: { platform_account_id: string; name: string; client_name?: string; internal_naming?: string }) =>
+  createDraft: (body: { platform_account_id: string; name: string; client_name?: string; internal_naming?: string; platform?: string }) =>
     api<any>('/campaigns/drafts', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
-  listDrafts: () =>
-    api<any[]>('/campaigns/drafts'),
+  listDrafts: (platform?: string) => {
+    let url = '/campaigns/drafts';
+    if (platform) url += `?platform=${encodeURIComponent(platform)}`;
+    return api<any[]>(url);
+  },
 
   getDraft: (id: string) =>
     api<any>(`/campaigns/drafts/${id}`),

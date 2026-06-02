@@ -11,6 +11,22 @@ interface SidebarProps {
 export default function Sidebar({ currentPath }: SidebarProps) {
   const [email, setEmail] = useState<string | null>(null);
 
+  const [platform, setPlatform] = useState<string>('meta');
+
+  useEffect(() => {
+    if (currentPath.includes('/google-ads')) {
+      setPlatform('google');
+    } else if (currentPath.includes('/meta-ads')) {
+      setPlatform('meta');
+    } else if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const p = urlParams.get('platform');
+      if (p) {
+        setPlatform(p);
+      }
+    }
+  }, [currentPath]);
+
   useEffect(() => {
     // Check if user is logged in, redirect if not
     const checkUser = async () => {
@@ -46,12 +62,14 @@ export default function Sidebar({ currentPath }: SidebarProps) {
   return (
     <aside className="w-64 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col justify-between h-screen">
       <div>
-        <div className="p-4 font-bold border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-          <span>LamaniAds</span>
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center">
+          <a href="/" className="block hover:opacity-80 transition-opacity">
+            <img 
+              src="https://res.cloudinary.com/lamanify/image/upload/v1780368033/Lamanify_44_tvqgij.webp" 
+              alt="LamaniAds" 
+              className="h-9 w-auto"
+            />
+          </a>
         </div>
         <nav className="p-4 space-y-1">
           <a
@@ -74,16 +92,42 @@ export default function Sidebar({ currentPath }: SidebarProps) {
           >
             Accounts
           </a>
-          <a
-            href="/campaigns"
-            className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              currentPath === '/campaigns'
-                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50'
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-            }`}
-          >
-            Campaigns
-          </a>
+          <div>
+            <a
+              href="/campaigns/meta-ads/manage"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentPath.startsWith('/campaigns')
+                  ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50'
+                  : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+              }`}
+            >
+              Campaigns
+            </a>
+            {currentPath.startsWith('/campaigns') && (
+              <div className="flex flex-col gap-1 mt-1 ml-4 border-l border-zinc-200 dark:border-zinc-800 pl-2">
+                <a
+                  href="/campaigns/meta-ads/manage"
+                  className={`flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    platform === 'meta'
+                      ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50'
+                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  Meta Ads
+                </a>
+                <a
+                  href="/campaigns/google-ads/manage"
+                  className={`flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    platform === 'google'
+                      ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50'
+                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  Google Ads
+                </a>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
 

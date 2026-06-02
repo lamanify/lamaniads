@@ -4,7 +4,7 @@ import jwt
 from src.core.config import settings
 
 # In a production app, load this from settings secret key
-SECRET_KEY = "super_secret_temporary_key_change_in_production"
+SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 

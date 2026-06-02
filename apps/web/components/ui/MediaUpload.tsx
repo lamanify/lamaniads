@@ -119,12 +119,12 @@ export function MediaUpload({
                   e.stopPropagation();
                   onRemove(idx);
                 }}
-                className="absolute right-1 top-1 rounded-full bg-zinc-900/80 p-0.5 text-white hover:bg-zinc-900"
+                className="absolute right-1 top-1 rounded-full bg-brand/80 p-0.5 text-white hover:bg-brand"
               >
                 <X className="h-3 w-3" />
               </button>
               {m.filename ? (
-                <div className="absolute bottom-0 left-0 right-0 bg-zinc-900/80 px-2 py-1 text-[10px] text-white truncate">
+                <div className="absolute bottom-0 left-0 right-0 bg-brand/80 px-2 py-1 text-[10px] text-white truncate">
                   {m.filename}
                 </div>
               ) : null}

@@ -19,6 +19,14 @@ export function WizardLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 dark">
       <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-6 bg-white dark:bg-zinc-950">
         <div className="flex items-center gap-3">
+          <Link href="/" className="block hover:opacity-80 transition-opacity">
+            <img 
+              src="https://res.cloudinary.com/lamanify/image/upload/v1780368033/Lamanify_44_tvqgij.webp" 
+              alt="LamaniAds" 
+              className="h-6 w-auto"
+            />
+          </Link>
+          <span className="h-5 w-px bg-zinc-200 dark:bg-zinc-800" />
           <Link
             href="/campaigns"
             className="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"

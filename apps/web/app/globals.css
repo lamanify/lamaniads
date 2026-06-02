@@ -9,6 +9,7 @@
   --muted-foreground: #71717a;
   --border: #e5e5e5;
   --ring: #d4d4d8;
+  --brand: #e9204f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +20,7 @@
     --muted-foreground: #a1a1aa;
     --border: #262626;
     --ring: #404040;
+    --brand: #e9204f;
   }
 }
 
@@ -29,6 +31,7 @@
   --muted-foreground: #a1a1aa;
   --border: #262626;
   --ring: #404040;
+  --brand: #e9204f;
 }
 
 body {

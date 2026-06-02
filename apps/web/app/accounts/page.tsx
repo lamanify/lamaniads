@@ -206,7 +206,7 @@ export default function AccountsPage() {
                       <button
                         onClick={() => handleConnect(platform)}
                         disabled={isConnecting || isDisconnecting}
-                        className="flex-1 py-2 rounded-md text-sm font-medium transition-colors bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 py-2 rounded-md text-sm font-medium transition-colors bg-brand text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isConnecting ? 'Reconnecting...' : 'Reconnect'}
                       </button>
@@ -222,7 +222,7 @@ export default function AccountsPage() {
                     <button
                       onClick={() => handleConnect(platform)}
                       disabled={isConnecting}
-                      className="w-full py-2 rounded-md text-sm font-medium transition-colors bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-2 rounded-md text-sm font-medium transition-colors bg-brand text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isConnecting ? 'Connecting...' : 'Connect Account'}
                     </button>
