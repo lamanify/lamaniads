@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently --kill-others \"turbo dev\" \"cd apps/api && .venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 8000\"",
     "build": "turbo build",
-    "deploy": "wrangler pages deploy apps/web/.open-next/cloudflare",
+    "deploy": "cd apps/web && wrangler pages deploy .open-next/cloudflare",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
